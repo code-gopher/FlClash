@@ -37,8 +37,7 @@ class Navigation {
       NavigationItem(
         icon: Icon(Icons.person),
         label: PageLabel.mine,
-        builder: (_) =>
-            const MineView(key: GlobalObjectKey(PageLabel.mine)),
+        builder: (_) => const MineView(key: GlobalObjectKey(PageLabel.mine)),
         modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
       ),
       NavigationItem(

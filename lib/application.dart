@@ -9,6 +9,7 @@ import 'package:fl_clash/manager/hotkey_manager.dart';
 import 'package:fl_clash/manager/manager.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/providers/v2board_provider.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -116,6 +117,17 @@ class ApplicationState extends ConsumerState<Application> {
           appSettingProvider.select((state) => state.locale),
         );
         final themeProps = ref.watch(themeSettingProvider);
+        final authState = ref.watch(v2boardAuthProvider);
+
+        Widget homePage;
+        if (authState.isLoading) {
+          homePage = const _LoadingPage();
+        } else if (!authState.isLogin) {
+          homePage = const LoginPage();
+        } else {
+          homePage = const HomePage();
+        }
+
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           navigatorKey: globalState.navigatorKey,
@@ -155,10 +167,9 @@ class ApplicationState extends ConsumerState<Application> {
               primaryColor: themeProps.primaryColor,
             ).toPureBlack(themeProps.pureBlack),
           ),
-          home: child!,
+          home: homePage,
         );
       },
-      child: const HomePage(),
     );
   }
 
@@ -169,5 +180,31 @@ class ApplicationState extends ConsumerState<Application> {
     await coreController.destroy();
     await appController.handleExit();
     super.dispose();
+  }
+}
+
+class _LoadingPage extends StatelessWidget {
+  const _LoadingPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.shield_outlined,
+              size: 64,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 24),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('加载中...', style: Theme.of(context).textTheme.bodyMedium),
+          ],
+        ),
+      ),
+    );
   }
 }

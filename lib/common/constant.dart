@@ -102,7 +102,7 @@ const profilesStoreKey = PageStorageKey<String>('profiles');
 const v2boardTokenKey = 'v2board_token';
 const v2boardBaseUrlKey = 'v2board_base_url';
 
-const defaultPrimaryColor = 0XFFD8C0C3;
+const defaultPrimaryColor = 0XFFBBC9CC;
 
 double getWidgetHeight(num lines) {
   final space = 14.mAp;
@@ -121,7 +121,7 @@ const defaultPrimaryColors = [
   0xFFFFFF00,
   0XFFBBC9CC,
   0XFFABD397,
-  defaultPrimaryColor,
+  0XFFD8C0C3,
   0XFF665390,
 ];
 

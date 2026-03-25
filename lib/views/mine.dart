@@ -1,282 +1,508 @@
-import 'dart:async';
-import 'package:fl_clash/views/tools.dart';
+import 'dart:io';
+
+import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/controller.dart';
+import 'package:fl_clash/l10n/l10n.dart';
+import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/views/about.dart';
+import 'package:fl_clash/views/access.dart';
+import 'package:fl_clash/views/application_setting.dart';
+import 'package:fl_clash/views/config/config.dart';
+import 'package:fl_clash/views/hotkey.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fl_clash/providers/v2board_provider.dart';
-import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/state.dart';
+import 'package:path/path.dart' show dirname, join;
 
-class MineView extends ConsumerStatefulWidget {
+import 'config/advanced.dart';
+import 'developer.dart';
+import 'theme.dart';
+import 'package:fl_clash/providers/v2board_provider.dart';
+
+class MineView extends ConsumerWidget {
   const MineView({super.key});
 
   @override
-  ConsumerState<MineView> createState() => _MineViewState();
-}
-
-class _MineViewState extends ConsumerState<MineView> {
-  bool _isLoginMode = true; // 控制登录/注册模式切换
-  int _countdown = 0;
-  Timer? _timer;
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _startCountdown(StateSetter setState) {
-    setState(() {
-      _countdown = 60;
-    });
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_countdown > 0) {
-        setState(() {
-          _countdown--;
-        });
-      } else {
-        _timer?.cancel();
-      }
-    });
-  }
-
-  void _showLoginDialog() {
-    String url = 'https://cloud.lanpanyun.top'; // 固定网址
-    String email = '';
-    String password = '';
-    String emailCode = '';
-    _isLoginMode = true;
-    _countdown = 0;
-    _timer?.cancel();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text(_isLoginMode ? '登录蓝盘云' : '注册蓝盘云'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      decoration: const InputDecoration(labelText: '邮箱'),
-                      onChanged: (v) => email = v,
-                    ),
-                    if (!_isLoginMode) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              decoration: const InputDecoration(labelText: '验证码'),
-                              onChanged: (v) => emailCode = v,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: _countdown > 0
-                                ? null
-                                : () async {
-                                    if (email.isEmpty) {
-                                      globalState.showMessage(
-                                          title: '提示',
-                                          message: const TextSpan(text: '请先输入邮箱'));
-                                      return;
-                                    }
-                                    try {
-                                      final tempClient = request.v2board;
-                                      tempClient.setBaseUrl(url);
-                                      await tempClient.sendEmailVerify(email);
-                                      globalState.showMessage(
-                                          title: '提示',
-                                          message: const TextSpan(text: '验证码发送成功'));
-                                      _startCountdown(setState);
-                                    } catch (e) {
-                                      globalState.showMessage(
-                                          title: '发送失败',
-                                          message: TextSpan(text: e.toString()));
-                                    }
-                                  },
-                            child: Text(_countdown > 0 ? '$_countdown s' : '获取验证码'),
-                          ),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    TextField(
-                      decoration: const InputDecoration(labelText: '密码'),
-                      obscureText: true,
-                      onChanged: (v) => password = v,
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isLoginMode = !_isLoginMode;
-                        });
-                      },
-                      child: Text(_isLoginMode ? '没有账号？去注册' : '已有账号？去登录'),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    try {
-                      final authNotifier = ref.read(v2boardAuthProvider.notifier);
-                      final tempClient = request.v2board;
-                      tempClient.setBaseUrl(url);
-
-                      String token = '';
-                      if (_isLoginMode) {
-                        final res = await tempClient.login(email, password);
-                        token = res['data']?['auth_data']?.toString() ?? '';
-                      } else {
-                        final res = await tempClient.register(email, password, emailCode);
-                        token = res['data']?['auth_data']?.toString() ?? '';
-                      }
-
-                      if (token.isEmpty) {
-                        throw Exception('未获取到授权 Token，可能账号密码错误');
-                      }
-
-                      await authNotifier.login(url, token);
-                      // 通过 getUserInfo 仅用于展示信息缓存，但要拿到真实订阅地址调用 getSubscribe
-                      final userInfo = await tempClient.getUserInfo();
-                      final subInfo = await tempClient.getSubscribe();
-                      
-                      final subscribeUrl = subInfo['data']?['subscribe_url']?.toString();
-                      
-                      // 登录成功后关闭弹窗
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-
-                      if (subscribeUrl != null && subscribeUrl.isNotEmpty) {
-                        await authNotifier.autoImportSubscription(subscribeUrl);
-                      } else {
-                        globalState.showMessage(
-                          title: '提示',
-                          message: const TextSpan(text: '未获取到订阅链接，可能需要先购买套餐'),
-                        );
-                      }
-
-                    } catch (e) {
-                      globalState.showMessage(
-                        title: _isLoginMode ? '登录失败' : '注册失败',
-                        message: TextSpan(text: e.toString()),
-                      );
-                    }
-                  },
-                  child: Text(_isLoginMode ? '登录' : '注册'),
-                ),
-              ],
-            );
-          }
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final authState = ref.watch(v2boardAuthProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subscribeAsync = ref.watch(v2boardSubscribeProvider);
     final userInfoAsync = ref.watch(v2boardUserInfoProvider);
+    final vm2 = ref.watch(
+      appSettingProvider.select(
+        (state) => VM2(state.locale, state.developerMode),
+      ),
+    );
 
     return CommonScaffold(
       title: '我的',
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          if (!authState.isLogin)
-            ListTile(
-              title: const Text('未登录'),
-              subtitle: const Text('点击登录/注册获取专属订阅'),
-              leading: const Icon(Icons.person_outline),
-              onTap: _showLoginDialog,
-            )
-          else
-            userInfoAsync.when(
-              data: (userInfo) {
-                if (userInfo == null) return const SizedBox();
-                final email = userInfo['email'] ?? 'Unknown';
-                final planName = userInfo['plan']?['name'] ?? '无套餐';
-                final expiredAt = userInfo['expired_at'];
-                
-                String expiredStr = '永久有效';
-                if (expiredAt != null) {
-                  // 有些接口返回的是秒级时间戳
-                  int ts = expiredAt is int ? expiredAt : int.tryParse(expiredAt.toString()) ?? 0;
-                  if (ts > 0) {
-                    final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-                    expiredStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} 到期';
-                  }
-                }
+          userInfoAsync.when(
+            data: (userInfo) {
+              if (userInfo == null) return const SizedBox();
+              final email = userInfo['email'] ?? 'Unknown';
+              final expiredAt = userInfo['expired_at'];
 
-                // 流量计算
-                final transferEnable = userInfo['transfer_enable'] ?? 0;
-                final u = userInfo['u'] ?? 0;
-                final d = userInfo['d'] ?? 0;
-                
-                // v2board API 中返回的 transfer_enable、u、d 一般都是以 Bytes (字节) 为单位
-                final usedBytes = (u is num ? u.toInt() : int.tryParse(u.toString()) ?? 0) + 
-                                  (d is num ? d.toInt() : int.tryParse(d.toString()) ?? 0);
-                final totalBytes = transferEnable is num ? transferEnable.toInt() : int.tryParse(transferEnable.toString()) ?? 0;
-                
-                String trafficStr = '';
-                if (totalBytes > 0) {
-                  final usedGb = (usedBytes / (1024 * 1024 * 1024)).toStringAsFixed(2);
-                  final totalGb = (totalBytes / (1024 * 1024 * 1024)).toStringAsFixed(2);
-                  trafficStr = '已用: $usedGb GB / 总计: $totalGb GB';
+              String expiredStr = '永久有效';
+              if (expiredAt != null) {
+                int ts = expiredAt is int
+                    ? expiredAt
+                    : int.tryParse(expiredAt.toString()) ?? 0;
+                if (ts > 0) {
+                  final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+                  expiredStr =
+                      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
                 }
+              }
 
-                return Column(
-                  children: [
-                    ListTile(
-                      title: Text(email.toString()),
-                      subtitle: const Text('已登录'),
-                      leading: const Icon(Icons.person),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.logout),
-                        onPressed: () {
-                          ref.read(v2boardAuthProvider.notifier).logout();
-                        },
+              return Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            child: Icon(
+                              Icons.person,
+                              size: 32,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  email,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                subscribeAsync.when(
+                                  data: (subscribeInfo) {
+                                    final planName =
+                                        subscribeInfo?['plan']?['name'] ??
+                                        '无套餐';
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primaryContainer,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        planName,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimaryContainer,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  loading: () => const SizedBox(),
+                                  error: (_, __) => const SizedBox(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.logout),
+                            onPressed: () {
+                              ref.read(v2boardAuthProvider.notifier).logout();
+                            },
+                            tooltip: '退出登录',
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 16),
+                      subscribeAsync.when(
+                        data: (subscribeInfo) {
+                          if (subscribeInfo == null) return const SizedBox();
+
+                          final transferEnable =
+                              subscribeInfo['transfer_enable'] ?? 0;
+                          final u = subscribeInfo['u'] ?? 0;
+                          final d = subscribeInfo['d'] ?? 0;
+                          final nextResetAt = subscribeInfo['next_reset_at'];
+
+                          final usedBytes =
+                              (u is num
+                                  ? u.toInt()
+                                  : int.tryParse(u.toString()) ?? 0) +
+                              (d is num
+                                  ? d.toInt()
+                                  : int.tryParse(d.toString()) ?? 0);
+                          final totalBytes = transferEnable is num
+                              ? transferEnable.toInt()
+                              : int.tryParse(transferEnable.toString()) ?? 0;
+
+                          String nextResetStr = '无';
+                          if (nextResetAt != null) {
+                            int ts = nextResetAt is int
+                                ? nextResetAt
+                                : int.tryParse(nextResetAt.toString()) ?? 0;
+                            if (ts > 0) {
+                              final date = DateTime.fromMillisecondsSinceEpoch(
+                                ts * 1000,
+                              );
+                              nextResetStr =
+                                  '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                            }
+                          }
+
+                          double trafficPercent = 0;
+                          String usedStr = '0 B';
+                          String totalStr = '0 B';
+                          if (totalBytes > 0) {
+                            trafficPercent = (usedBytes / totalBytes).clamp(
+                              0.0,
+                              1.0,
+                            );
+                            usedStr = _formatBytes(usedBytes);
+                            totalStr = _formatBytes(totalBytes);
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (totalBytes > 0) ...[
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '流量使用',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                    Text(
+                                      '$usedStr / $totalStr',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: trafficPercent,
+                                    minHeight: 8,
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                              ],
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 16,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '到期: $expiredStr',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.refresh,
+                                    size: 16,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '下次重置: $nextResetStr',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
+                        loading: () => const SizedBox(),
+                        error: (_, __) => Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              size: 16,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '到期: $expiredStr',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            loading: () => const Card(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ),
+            error: (err, stack) => Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Theme.of(context).colorScheme.error,
+                      size: 48,
                     ),
-                    ListTile(
-                      title: Text('当前套餐: ${planName.toString()}'),
-                      subtitle: Text('$expiredStr\n$trafficStr'),
-                      leading: const Icon(Icons.card_membership),
+                    const SizedBox(height: 8),
+                    Text(
+                      '获取用户信息失败',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      err.toString(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(v2boardAuthProvider.notifier).logout();
+                      },
+                      icon: const Icon(Icons.logout),
+                      label: const Text('退出登录'),
                     ),
                   ],
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => ListTile(
-                title: const Text('获取用户信息失败'),
-                subtitle: Text(err.toString()),
-                trailing: IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: () {
-                    ref.read(v2boardAuthProvider.notifier).logout();
-                  },
                 ),
               ),
             ),
-          const Divider(),
-          // 这里的 ToolsView 内部是 Scaffold + ListView.builder
-          // 我们把它放在 Expanded 里，整个外层去掉 ListView，改为 Column
-          const Expanded(
-            child: ToolsView(),
+          ),
+          const SizedBox(height: 8),
+          _buildToolItem(
+            context,
+            icon: Icons.language,
+            title: '语言',
+            onTap: () => _showLanguageDialog(context, ref),
+          ),
+          _buildToolItem(
+            context,
+            icon: Icons.style,
+            title: '主题',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ThemeView()),
+            ),
+          ),
+          if (system.isDesktop)
+            _buildToolItem(
+              context,
+              icon: Icons.keyboard,
+              title: '快捷键',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const HotKeyView()),
+              ),
+            ),
+          if (system.isWindows)
+            _buildToolItem(
+              context,
+              icon: Icons.lock,
+              title: '回环访问',
+              onTap: () {
+                windows?.runas(
+                  '"${join(dirname(Platform.resolvedExecutable), "EnableLoopback.exe")}"',
+                  '',
+                );
+              },
+            ),
+          if (system.isAndroid)
+            _buildToolItem(
+              context,
+              icon: Icons.view_list,
+              title: '访问控制',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AccessView()),
+              ),
+            ),
+          _buildToolItem(
+            context,
+            icon: Icons.edit,
+            title: '基础配置',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ConfigView()),
+            ),
+          ),
+          _buildToolItem(
+            context,
+            icon: Icons.build,
+            title: '高级配置',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdvancedConfigView()),
+            ),
+          ),
+          _buildToolItem(
+            context,
+            icon: Icons.settings,
+            title: '应用设置',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ApplicationSettingView()),
+            ),
+          ),
+          if (vm2.b)
+            _buildToolItem(
+              context,
+              icon: Icons.developer_board,
+              title: '开发者模式',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DeveloperView()),
+              ),
+            ),
+          _buildToolItem(
+            context,
+            icon: Icons.info,
+            title: '关于',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AboutView()),
+            ),
+            showDivider: false,
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildToolItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool showDivider = true,
+  }) {
+    return Column(
+      children: [
+        ListTile(
+          leading: Icon(icon),
+          title: Text(title),
+          trailing: const Icon(Icons.chevron_right, size: 20),
+          onTap: onTap,
+          dense: true,
+        ),
+        if (showDivider) const Divider(height: 1, indent: 56, endIndent: 16),
+      ],
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context, WidgetRef ref) {
+    final currentLocale = utils.getLocaleForString(
+      ref.read(appSettingProvider.select((state) => state.locale)),
+    );
+    final locales = [null, ...AppLocalizations.delegate.supportedLocales];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('选择语言'),
+        content: SizedBox(
+          width: 300,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: locales.length,
+            itemBuilder: (_, index) {
+              final locale = locales[index];
+              final isSelected = locale == currentLocale;
+              final label = locale?.toString() ?? '默认';
+              return ListTile(
+                title: Text(label),
+                trailing: isSelected ? const Icon(Icons.check) : null,
+                onTap: () {
+                  ref
+                      .read(appSettingProvider.notifier)
+                      .update(
+                        (state) => state.copyWith(locale: locale?.toString()),
+                      );
+                  Navigator.pop(context);
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
   }
 }
