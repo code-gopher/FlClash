@@ -19,30 +19,25 @@ class V2boardClient {
 
   Options get _authOptions {
     if (_token == null) return Options();
-    return Options(headers: {
-      'Authorization': '$_token',
-    });
+    return Options(headers: {'Authorization': '$_token'});
   }
 
   Future<dynamic> login(String email, String password) async {
     final response = await dio.post(
       '$_baseUrl/api/v1/passport/auth/login',
-      data: {
-        'email': email,
-        'password': password,
-      },
+      data: {'email': email, 'password': password},
     );
     return response.data;
   }
 
-  Future<dynamic> register(String email, String password, String emailCode) async {
+  Future<dynamic> register(
+    String email,
+    String password,
+    String emailCode,
+  ) async {
     final response = await dio.post(
       '$_baseUrl/api/v1/passport/auth/register',
-      data: {
-        'email': email,
-        'password': password,
-        'email_code': emailCode,
-      },
+      data: {'email': email, 'password': password, 'email_code': emailCode},
     );
     return response.data;
   }
@@ -50,9 +45,7 @@ class V2boardClient {
   Future<dynamic> sendEmailVerify(String email) async {
     final response = await dio.post(
       '$_baseUrl/api/v1/passport/comm/sendEmailVerify',
-      data: {
-        'email': email,
-      },
+      data: {'email': email},
     );
     return response.data;
   }
@@ -79,5 +72,76 @@ class V2boardClient {
       options: _authOptions,
     );
     return response.data;
+  }
+
+  Future<dynamic> getPaymentMethod() async {
+    final response = await dio.get(
+      '$_baseUrl/api/v1/user/order/getPaymentMethod',
+      options: _authOptions,
+    );
+    return response.data;
+  }
+
+  Future<dynamic> createOrder({
+    required int planId,
+    required String period,
+    String couponCode = '',
+  }) async {
+    try {
+      final response = await dio.post(
+        '$_baseUrl/api/v1/user/order/save?plan_id=$planId&period=$period&coupon_code=$couponCode',
+        options: _authOptions,
+      );
+      print('[V2Board] createOrder response: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('[V2Board] createOrder error: ${e.response?.data}');
+      print('[V2Board] createOrder statusCode: ${e.response?.statusCode}');
+      rethrow;
+    }
+  }
+
+  Future<String?> checkoutOrder({
+    required String tradeNo,
+    required int method,
+  }) async {
+    try {
+      final response = await dio.post(
+        '$_baseUrl/api/v1/user/order/checkout?trade_no=$tradeNo&method=$method',
+        options: _authOptions,
+      );
+      print('[V2Board] checkoutOrder response: ${response.data}');
+      final data = response.data;
+      if (data['type'] == 1 || data['type'] == -1) {
+        return data['data'];
+      }
+      return null;
+    } on DioException catch (e) {
+      print('[V2Board] checkoutOrder error: ${e.response?.data}');
+      print('[V2Board] checkoutOrder statusCode: ${e.response?.statusCode}');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> getOrderList() async {
+    final response = await dio.get(
+      '$_baseUrl/api/v1/user/order/fetch',
+      options: _authOptions,
+    );
+    return response.data;
+  }
+
+  Future<dynamic> cancelOrder(String tradeNo) async {
+    try {
+      final response = await dio.post(
+        '$_baseUrl/api/v1/user/order/cancel?trade_no=$tradeNo',
+        options: _authOptions,
+      );
+      return response.data;
+    } on DioException catch (e) {
+      print('[V2Board] cancelOrder error: ${e.response?.data}');
+      print('[V2Board] cancelOrder statusCode: ${e.response?.statusCode}');
+      rethrow;
+    }
   }
 }

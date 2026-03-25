@@ -194,3 +194,29 @@ final v2boardSubscribeProvider = FutureProvider<Map<String, dynamic>?>((
     return null;
   }
 });
+
+// 用于缓存支付方式列表
+final v2boardPaymentMethodsProvider = FutureProvider<List<dynamic>>((
+  ref,
+) async {
+  final authState = ref.watch(v2boardAuthProvider);
+  if (!authState.isLogin) return [];
+  try {
+    final data = await request.v2board.getPaymentMethod();
+    return data['data'] ?? [];
+  } catch (e) {
+    return [];
+  }
+});
+
+// 用于缓存订单列表
+final v2boardOrdersProvider = FutureProvider<List<dynamic>>((ref) async {
+  final authState = ref.watch(v2boardAuthProvider);
+  if (!authState.isLogin) return [];
+  try {
+    final data = await request.v2board.getOrderList();
+    return data['data'] as List<dynamic>? ?? [];
+  } catch (e) {
+    return [];
+  }
+});

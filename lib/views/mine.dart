@@ -10,6 +10,7 @@ import 'package:fl_clash/views/access.dart';
 import 'package:fl_clash/views/application_setting.dart';
 import 'package:fl_clash/views/config/config.dart';
 import 'package:fl_clash/views/hotkey.dart';
+import 'package:fl_clash/views/order_list.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -334,6 +335,15 @@ class MineView extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
+          _buildToolItem(
+            context,
+            icon: Icons.receipt_long,
+            title: '我的订单',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const OrderListView()),
+            ),
+          ),
           _buildToolItem(
             context,
             icon: Icons.language,
