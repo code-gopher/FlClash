@@ -16,7 +16,7 @@ val localProperties = Properties().apply {
     }
 }
 
-val mStoreFile: File = file("keystore.jks")
+val mStoreFile: File = file("flclash.jks")
 val mStorePassword: String? = localProperties.getProperty("storePassword")
 val mKeyAlias: String? = localProperties.getProperty("keyAlias")
 val mKeyPassword: String? = localProperties.getProperty("keyPassword")
