@@ -402,6 +402,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "pressKeyboard": MessageLookupByLibrary.simpleMessage("请按下按键"),
     "preview": MessageLookupByLibrary.simpleMessage("预览"),
     "process": MessageLookupByLibrary.simpleMessage("进程"),
+    "packages": MessageLookupByLibrary.simpleMessage("套餐"),
+    "mine": MessageLookupByLibrary.simpleMessage("我的"),
     "profile": MessageLookupByLibrary.simpleMessage("配置"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("请输入有效间隔时间格式"),

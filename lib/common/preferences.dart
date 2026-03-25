@@ -85,6 +85,30 @@ class Preferences {
     return preferences?.setString(configKey, json.encode(config)) ?? false;
   }
 
+  Future<void> saveV2boardAuth(String? url, String? token) async {
+    final preferences = await sharedPreferencesCompleter.future;
+    if (url != null) {
+      await preferences?.setString(v2boardBaseUrlKey, url);
+    } else {
+      await preferences?.remove(v2boardBaseUrlKey);
+    }
+    if (token != null) {
+      await preferences?.setString(v2boardTokenKey, token);
+    } else {
+      await preferences?.remove(v2boardTokenKey);
+    }
+  }
+
+  Future<String?> getV2boardBaseUrl() async {
+    final preferences = await sharedPreferencesCompleter.future;
+    return preferences?.getString(v2boardBaseUrlKey);
+  }
+
+  Future<String?> getV2boardToken() async {
+    final preferences = await sharedPreferencesCompleter.future;
+    return preferences?.getString(v2boardTokenKey);
+  }
+
   Future<void> clearPreferences() async {
     final sharedPreferencesIns = await sharedPreferencesCompleter.future;
     await sharedPreferencesIns?.clear();

@@ -99,6 +99,9 @@ const proxiesListStoreKey = PageStorageKey<String>('proxies_list');
 const toolsStoreKey = PageStorageKey<String>('tools');
 const profilesStoreKey = PageStorageKey<String>('profiles');
 
+const v2boardTokenKey = 'v2board_token';
+const v2boardBaseUrlKey = 'v2board_base_url';
+
 const defaultPrimaryColor = 0XFFD8C0C3;
 
 double getWidgetHeight(num lines) {

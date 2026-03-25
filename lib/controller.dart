@@ -338,7 +338,7 @@ extension ProfilesControllerExt on AppController {
     if (globalState.navigatorKey.currentState?.canPop() ?? false) {
       globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
     }
-    toProfiles();
+    toPage(PageLabel.proxies);
     final profile = await loadingRun(tag: LoadingTag.profiles, () async {
       return await Profile.normal(url: url).update();
     }, title: appLocalizations.addProfile);
@@ -362,7 +362,7 @@ extension ProfilesControllerExt on AppController {
     }
     if (!_context.mounted) return;
     globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
-    toProfiles();
+    toPage(PageLabel.proxies);
     final profile = await loadingRun(tag: LoadingTag.profiles, () async {
       return await Profile.normal(label: platformFile?.name).saveFile(bytes);
     }, title: appLocalizations.addProfile);
@@ -1092,12 +1092,14 @@ extension StoreControllerExt on AppController {
 }
 
 extension CommonControllerExt on AppController {
+  WidgetRef get ref => _ref;
+
   void toPage(PageLabel pageLabel) {
     _ref.read(currentPageLabelProvider.notifier).value = pageLabel;
   }
 
   void toProfiles() {
-    toPage(PageLabel.profiles);
+    toPage(PageLabel.proxies);
   }
 
   void updateStart() {

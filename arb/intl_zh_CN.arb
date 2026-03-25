@@ -4,6 +4,8 @@
   "direct": "直连",
   "dashboard": "仪表盘",
   "proxies": "代理",
+  "packages": "套餐",
+  "mine": "我的",
   "profile": "配置",
   "profiles": "配置",
   "tools": "工具",

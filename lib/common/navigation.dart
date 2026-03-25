@@ -28,10 +28,18 @@ class Navigation {
             : [],
       ),
       NavigationItem(
-        icon: Icon(Icons.folder),
-        label: PageLabel.profiles,
+        icon: Icon(Icons.shopping_cart),
+        label: PageLabel.packages,
         builder: (_) =>
-            const ProfilesView(key: GlobalObjectKey(PageLabel.profiles)),
+            const PackagesView(key: GlobalObjectKey(PageLabel.packages)),
+        modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
+      ),
+      NavigationItem(
+        icon: Icon(Icons.person),
+        label: PageLabel.mine,
+        builder: (_) =>
+            const MineView(key: GlobalObjectKey(PageLabel.mine)),
+        modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
       ),
       NavigationItem(
         icon: Icon(Icons.view_timeline),
@@ -65,12 +73,6 @@ class Navigation {
         modes: openLogs
             ? [NavigationItemMode.desktop, NavigationItemMode.more]
             : [],
-      ),
-      NavigationItem(
-        icon: Icon(Icons.construction),
-        label: PageLabel.tools,
-        builder: (_) => const ToolsView(key: GlobalObjectKey(PageLabel.tools)),
-        modes: [NavigationItemMode.desktop, NavigationItemMode.mobile],
       ),
     ];
   }

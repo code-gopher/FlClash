@@ -4,6 +4,8 @@
   "direct": "Direct",
   "dashboard": "Dashboard",
   "proxies": "Proxies",
+  "packages": "Packages",
+  "mine": "Mine",
   "profile": "Profile",
   "profiles": "Profiles",
   "tools": "Tools",

@@ -79,6 +79,16 @@ class AppLocalizations {
     return Intl.message('Proxies', name: 'proxies', desc: '', args: []);
   }
 
+  /// `Packages`
+  String get packages {
+    return Intl.message('Packages', name: 'packages', desc: '', args: []);
+  }
+
+  /// `Mine`
+  String get mine {
+    return Intl.message('Mine', name: 'mine', desc: '', args: []);
+  }
+
   /// `Profile`
   String get profile {
     return Intl.message('Profile', name: 'profile', desc: '', args: []);

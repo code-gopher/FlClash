@@ -15,6 +15,7 @@ import 'package:flutter/cupertino.dart';
 class Request {
   late final Dio dio;
   late final Dio _clashDio;
+  late final V2boardClient v2board;
   String? userAgent;
 
   Request() {
@@ -30,6 +31,7 @@ class Request {
         return client;
       },
     );
+    v2board = V2boardClient(dio: dio);
   }
 
   Future<Response<Uint8List>> getFileResponseForUrl(String url) async {

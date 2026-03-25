@@ -460,6 +460,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "pressKeyboard": MessageLookupByLibrary.simpleMessage("キーボードを押してください"),
     "preview": MessageLookupByLibrary.simpleMessage("プレビュー"),
     "process": MessageLookupByLibrary.simpleMessage("プロセス"),
+    "packages": MessageLookupByLibrary.simpleMessage("パッケージ"),
+    "mine": MessageLookupByLibrary.simpleMessage("マイ"),
     "profile": MessageLookupByLibrary.simpleMessage("プロファイル"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("有効な間隔形式を入力してください"),

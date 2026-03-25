@@ -607,6 +607,8 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "preview": MessageLookupByLibrary.simpleMessage("Preview"),
     "process": MessageLookupByLibrary.simpleMessage("Process"),
+    "packages": MessageLookupByLibrary.simpleMessage("Packages"),
+    "mine": MessageLookupByLibrary.simpleMessage("Mine"),
     "profile": MessageLookupByLibrary.simpleMessage("Profile"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage(

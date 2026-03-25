@@ -44,17 +44,13 @@ GroupsState currentGroupsState(Ref ref) {
 @riverpod
 NavigationItemsState navigationItemsState(Ref ref) {
   final openLogs = ref.watch(appSettingProvider).openLogs;
-  final hasProfiles = ref.watch(
-    profilesProvider.select((state) => state.isNotEmpty),
-  );
-  final hasProxies = ref.watch(
-    currentGroupsStateProvider.select((state) => state.value.isNotEmpty),
-  );
-  final isInit = ref.watch(initProvider);
+  // 由于我们隐藏了 Profiles 页面，为了确保能看到 proxies，强制设为 true 或者根据 auth 状态判断
+  // 这里暂时直接写死为 true，让 proxies 始终展示
+  final hasProxies = true;
   return NavigationItemsState(
     value: navigation.getItems(
       openLogs: openLogs,
-      hasProxies: !isInit ? hasProfiles : hasProxies,
+      hasProxies: hasProxies,
     ),
   );
 }

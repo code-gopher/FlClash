@@ -43,5 +43,6 @@ export 'task.dart';
 export 'text.dart';
 export 'tray.dart';
 export 'utils.dart';
+export 'v2board_client.dart';
 export 'window.dart';
 export 'yaml.dart';
