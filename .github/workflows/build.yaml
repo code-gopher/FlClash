@@ -43,16 +43,17 @@ jobs:
           $cargoPath = "$env:USERPROFILE\.cargo\bin"
           Add-Content $env:GITHUB_PATH $cargoPath
 
+      - name: Configure git for submodules
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
           persist-credentials: false
-
-      - name: Setup git for submodules
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git submodule sync --recursive
+          ssh-strict: false
 
       - name: Setup Android Signing
         if: startsWith(matrix.platform,'android')
