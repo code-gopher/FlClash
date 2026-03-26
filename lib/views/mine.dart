@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -335,132 +334,100 @@ class MineView extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          _buildToolItem(
-            context,
-            icon: Icons.receipt_long,
-            title: '我的订单',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const OrderListView()),
-            ),
-          ),
-          _buildToolItem(
-            context,
-            icon: Icons.language,
-            title: '语言',
-            onTap: () => _showLanguageDialog(context, ref),
-          ),
-          _buildToolItem(
-            context,
-            icon: Icons.style,
-            title: '主题',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ThemeView()),
-            ),
-          ),
-          if (system.isDesktop)
-            _buildToolItem(
-              context,
-              icon: Icons.keyboard,
-              title: '快捷键',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HotKeyView()),
-              ),
-            ),
-          if (system.isWindows)
-            _buildToolItem(
-              context,
-              icon: Icons.lock,
-              title: '回环访问',
-              onTap: () {
-                windows?.runas(
-                  '"${join(dirname(Platform.resolvedExecutable), "EnableLoopback.exe")}"',
-                  '',
-                );
-              },
-            ),
-          if (system.isAndroid)
-            _buildToolItem(
-              context,
-              icon: Icons.view_list,
-              title: '访问控制',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AccessView()),
-              ),
-            ),
-          _buildToolItem(
-            context,
-            icon: Icons.edit,
-            title: '基础配置',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ConfigView()),
-            ),
-          ),
-          _buildToolItem(
-            context,
-            icon: Icons.build,
-            title: '高级配置',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AdvancedConfigView()),
-            ),
-          ),
-          _buildToolItem(
-            context,
-            icon: Icons.settings,
-            title: '应用设置',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ApplicationSettingView()),
-            ),
-          ),
-          if (vm2.b)
-            _buildToolItem(
-              context,
-              icon: Icons.developer_board,
-              title: '开发者模式',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DeveloperView()),
-              ),
-            ),
-          _buildToolItem(
-            context,
-            icon: Icons.info,
-            title: '关于',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AboutView()),
-            ),
-            showDivider: false,
-          ),
+          ..._buildSettingsList(context, ref, vm2.b),
         ],
       ),
     );
   }
 
-  Widget _buildToolItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool showDivider = true,
-  }) {
-    return Column(
-      children: [
-        ListTile(
-          leading: Icon(icon),
-          title: Text(title),
-          trailing: const Icon(Icons.chevron_right, size: 20),
-          onTap: onTap,
-          dense: true,
+  List<Widget> _buildSettingsList(
+    BuildContext context,
+    WidgetRef ref,
+    bool enableDeveloperMode,
+  ) {
+    return [
+      ListItem.open(
+        leading: const Icon(Icons.receipt_long),
+        title: const Text('我的订单'),
+        delegate: const OpenDelegate(widget: OrderListView()),
+      ),
+      const _LocaleItem(),
+      ListItem.open(
+        leading: const Icon(Icons.style),
+        title: const Text('主题'),
+        delegate: const OpenDelegate(widget: ThemeView()),
+      ),
+      if (system.isDesktop)
+        ListItem.open(
+          leading: const Icon(Icons.keyboard),
+          title: const Text('快捷键'),
+          delegate: const OpenDelegate(widget: HotKeyView()),
         ),
-        if (showDivider) const Divider(height: 1, indent: 56, endIndent: 16),
-      ],
+      if (system.isWindows)
+        ListItem(
+          leading: const Icon(Icons.lock),
+          title: const Text('回环访问'),
+          onTap: () {
+            windows?.runas(
+              '"${join(dirname(Platform.resolvedExecutable), "EnableLoopback.exe")}"',
+              '',
+            );
+          },
+        ),
+      if (system.isAndroid)
+        ListItem.open(
+          leading: const Icon(Icons.view_list),
+          title: const Text('访问控制'),
+          delegate: const OpenDelegate(widget: AccessView()),
+        ),
+      ListItem.open(
+        leading: const Icon(Icons.edit),
+        title: const Text('基础配置'),
+        delegate: const OpenDelegate(widget: ConfigView()),
+      ),
+      ListItem.open(
+        leading: const Icon(Icons.build),
+        title: const Text('高级配置'),
+        delegate: const OpenDelegate(widget: AdvancedConfigView()),
+      ),
+      ListItem.open(
+        leading: const Icon(Icons.settings),
+        title: const Text('应用设置'),
+        delegate: const OpenDelegate(widget: ApplicationSettingView()),
+      ),
+      if (enableDeveloperMode)
+        ListItem.open(
+          leading: const Icon(Icons.developer_board),
+          title: const Text('开发者模式'),
+          delegate: const OpenDelegate(widget: DeveloperView()),
+        ),
+      ListItem.open(
+        leading: const Icon(Icons.info),
+        title: const Text('关于'),
+        delegate: const OpenDelegate(widget: AboutView()),
+      ),
+    ];
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+  }
+}
+
+class _LocaleItem extends ConsumerWidget {
+  const _LocaleItem({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListItem(
+      leading: const Icon(Icons.language),
+      title: const Text('语言'),
+      trailing: const Icon(Icons.chevron_right, size: 20),
+      onTap: () => _showLanguageDialog(context, ref),
     );
   }
 
@@ -506,13 +473,5 @@ class MineView extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024)
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
   }
 }
