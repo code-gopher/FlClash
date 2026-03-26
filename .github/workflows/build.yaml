@@ -54,7 +54,7 @@ jobs:
           DATE=$(date +%Y%m%d)
           BUILD=$(printf "%s%02d" "$DATE" "1")
           FULL_VERSION="${VERSION}+${BUILD}"
-          sed -i "s/^version:.*/version: ${FULL_VERSION}/" pubspec.yaml
+          sed "s/^version:.*/version: ${FULL_VERSION}/" pubspec.yaml > pubspec.yaml.tmp && mv pubspec.yaml.tmp pubspec.yaml
           echo "Updated version to: ${FULL_VERSION}"
 
       - name: Setup Android Signing
