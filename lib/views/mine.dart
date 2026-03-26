@@ -351,19 +351,19 @@ class MineView extends ConsumerWidget {
         title: const Text('我的订单'),
         delegate: const OpenDelegate(widget: OrderListView()),
       ),
-      const _LocaleItem(),
+      if (false) const _LocaleItem(), // 语言
       ListItem.open(
         leading: const Icon(Icons.style),
-        title: const Text('主题'),
+        title: const Text('系统主题'),
         delegate: const OpenDelegate(widget: ThemeView()),
       ),
-      if (system.isDesktop)
+      if (false && system.isDesktop)
         ListItem.open(
           leading: const Icon(Icons.keyboard),
           title: const Text('快捷键'),
           delegate: const OpenDelegate(widget: HotKeyView()),
         ),
-      if (system.isWindows)
+      if (false && system.isWindows)
         ListItem(
           leading: const Icon(Icons.lock),
           title: const Text('回环访问'),
@@ -380,22 +380,25 @@ class MineView extends ConsumerWidget {
           title: const Text('访问控制'),
           delegate: const OpenDelegate(widget: AccessView()),
         ),
-      ListItem.open(
-        leading: const Icon(Icons.edit),
-        title: const Text('基础配置'),
-        delegate: const OpenDelegate(widget: ConfigView()),
-      ),
-      ListItem.open(
-        leading: const Icon(Icons.build),
-        title: const Text('高级配置'),
-        delegate: const OpenDelegate(widget: AdvancedConfigView()),
-      ),
-      ListItem.open(
-        leading: const Icon(Icons.settings),
-        title: const Text('应用设置'),
-        delegate: const OpenDelegate(widget: ApplicationSettingView()),
-      ),
-      if (enableDeveloperMode)
+      if (false)
+        ListItem.open(
+          leading: const Icon(Icons.edit),
+          title: const Text('基础配置'),
+          delegate: const OpenDelegate(widget: ConfigView()),
+        ),
+      if (false)
+        ListItem.open(
+          leading: const Icon(Icons.build),
+          title: const Text('高级配置'),
+          delegate: const OpenDelegate(widget: AdvancedConfigView()),
+        ),
+      if (false)
+        ListItem.open(
+          leading: const Icon(Icons.settings),
+          title: const Text('应用设置'),
+          delegate: const OpenDelegate(widget: ApplicationSettingView()),
+        ),
+      if (false && enableDeveloperMode)
         ListItem.open(
           leading: const Icon(Icons.developer_board),
           title: const Text('开发者模式'),

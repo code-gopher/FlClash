@@ -48,6 +48,15 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Update Version
+        run: |
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          DATE=$(date +%Y%m%d)
+          BUILD=$(printf "%s%02d" "$DATE" "1")
+          FULL_VERSION="${VERSION}+${BUILD}"
+          sed -i "s/^version:.*/version: ${FULL_VERSION}/" pubspec.yaml
+          echo "Updated version to: ${FULL_VERSION}"
+
       - name: Setup Android Signing
         if: startsWith(matrix.platform,'android')
         run: |
