@@ -1,8 +1,8 @@
 display_name: FlClash
 package_name: FlClash
 maintainer:
-  name: 'code-gopher'
-  email: 'code-gopher@github.com'
+  name: langpanyun
+  email: langpanyun@github.com
 
 priority: optional
 section: x11
