@@ -22,6 +22,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailCodeController = TextEditingController();
+  final _inviteCodeController = TextEditingController();
 
   @override
   void dispose() {
@@ -29,6 +30,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _emailCodeController.dispose();
+    _inviteCodeController.dispose();
     super.dispose();
   }
 
@@ -95,7 +97,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           });
           return;
         }
-        final res = await tempClient.register(email, password, emailCode);
+        final res = await tempClient.register(
+          email,
+          password,
+          emailCode,
+          inviteCode: _inviteCodeController.text.trim(),
+        );
         token = res['data']?['auth_data']?.toString() ?? '';
       }
 
@@ -175,6 +182,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 if (!_isLoginMode) ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _inviteCodeController,
+                    decoration: const InputDecoration(
+                      labelText: '邀请码（选填）',
+                      prefixIcon: Icon(Icons.card_giftcard_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [

@@ -33,11 +33,17 @@ class V2boardClient {
   Future<dynamic> register(
     String email,
     String password,
-    String emailCode,
-  ) async {
+    String emailCode, {
+    String inviteCode = '',
+  }) async {
     final response = await dio.post(
       '$_baseUrl/api/v1/passport/auth/register',
-      data: {'email': email, 'password': password, 'email_code': emailCode},
+      data: {
+        'email': email,
+        'password': password,
+        'email_code': emailCode,
+        if (inviteCode.isNotEmpty) 'invite_code': inviteCode,
+      },
     );
     return response.data;
   }
@@ -195,8 +201,31 @@ class V2boardClient {
   }
 
   Future<dynamic> closeTicket({required int id}) async {
+    try {
+      final response = await dio.post(
+        '$_baseUrl/api/v1/user/ticket/close?id=$id',
+        options: _authOptions,
+      );
+      print('[V2Board] closeTicket response: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('[V2Board] closeTicket error: ${e.response?.data}');
+      print('[V2Board] closeTicket statusCode: ${e.response?.statusCode}');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> getInviteCodes() async {
     final response = await dio.get(
-      '$_baseUrl/api/v1/user/ticket/close?id=$id',
+      '$_baseUrl/api/v1/user/invite/fetch',
+      options: _authOptions,
+    );
+    return response.data;
+  }
+
+  Future<dynamic> getInviteDetails({int pageSize = 999}) async {
+    final response = await dio.get(
+      '$_baseUrl/api/v1/user/invite/details?page_size=$pageSize',
       options: _authOptions,
     );
     return response.data;

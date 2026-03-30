@@ -1,24 +1,13 @@
-import 'dart:io';
-
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/l10n/l10n.dart';
-import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
-import 'package:fl_clash/views/about.dart';
-import 'package:fl_clash/views/access.dart';
-import 'package:fl_clash/views/application_setting.dart';
-import 'package:fl_clash/views/config/config.dart';
-import 'package:fl_clash/views/hotkey.dart';
 import 'package:fl_clash/views/order_list.dart';
 import 'package:fl_clash/views/ticket_view.dart';
+import 'package:fl_clash/views/invite_view.dart';
+import 'package:fl_clash/views/system_setting_view.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' show dirname, join;
 
-import 'config/advanced.dart';
-import 'developer.dart';
-import 'theme.dart';
 import 'package:fl_clash/providers/v2board_provider.dart';
 
 class MineView extends ConsumerWidget {
@@ -28,11 +17,6 @@ class MineView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final subscribeAsync = ref.watch(v2boardSubscribeProvider);
     final userInfoAsync = ref.watch(v2boardUserInfoProvider);
-    final vm2 = ref.watch(
-      appSettingProvider.select(
-        (state) => VM2(state.locale, state.developerMode),
-      ),
-    );
 
     return CommonScaffold(
       title: '我的',
@@ -335,87 +319,29 @@ class MineView extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          ..._buildSettingsList(context, ref, vm2.b),
+          ListItem.open(
+            leading: const Icon(Icons.receipt_long),
+            title: const Text('我的订单'),
+            delegate: const OpenDelegate(widget: OrderListView()),
+          ),
+          ListItem.open(
+            leading: const Icon(Icons.confirmation_number),
+            title: const Text('工单列表'),
+            delegate: const OpenDelegate(widget: TicketListView()),
+          ),
+          ListItem.open(
+            leading: const Icon(Icons.campaign),
+            title: const Text('推广中心'),
+            delegate: const OpenDelegate(widget: InviteView()),
+          ),
+          ListItem.open(
+            leading: const Icon(Icons.settings),
+            title: const Text('系统设置'),
+            delegate: const OpenDelegate(widget: SystemSettingView()),
+          ),
         ],
       ),
     );
-  }
-
-  List<Widget> _buildSettingsList(
-    BuildContext context,
-    WidgetRef ref,
-    bool enableDeveloperMode,
-  ) {
-    return [
-      ListItem.open(
-        leading: const Icon(Icons.receipt_long),
-        title: const Text('我的订单'),
-        delegate: const OpenDelegate(widget: OrderListView()),
-      ),
-      ListItem.open(
-        leading: const Icon(Icons.confirmation_number),
-        title: const Text('工单列表'),
-        delegate: const OpenDelegate(widget: TicketListView()),
-      ),
-      if (false) const _LocaleItem(), // 语言
-      ListItem.open(
-        leading: const Icon(Icons.style),
-        title: const Text('系统主题'),
-        delegate: const OpenDelegate(widget: ThemeView()),
-      ),
-      if (false && system.isDesktop)
-        ListItem.open(
-          leading: const Icon(Icons.keyboard),
-          title: const Text('快捷键'),
-          delegate: const OpenDelegate(widget: HotKeyView()),
-        ),
-      if (false && system.isWindows)
-        ListItem(
-          leading: const Icon(Icons.lock),
-          title: const Text('回环访问'),
-          onTap: () {
-            windows?.runas(
-              '"${join(dirname(Platform.resolvedExecutable), "EnableLoopback.exe")}"',
-              '',
-            );
-          },
-        ),
-      if (system.isAndroid)
-        ListItem.open(
-          leading: const Icon(Icons.view_list),
-          title: const Text('访问控制'),
-          delegate: const OpenDelegate(widget: AccessView()),
-        ),
-      if (false)
-        ListItem.open(
-          leading: const Icon(Icons.edit),
-          title: const Text('基础配置'),
-          delegate: const OpenDelegate(widget: ConfigView()),
-        ),
-      if (false)
-        ListItem.open(
-          leading: const Icon(Icons.build),
-          title: const Text('高级配置'),
-          delegate: const OpenDelegate(widget: AdvancedConfigView()),
-        ),
-      if (false)
-        ListItem.open(
-          leading: const Icon(Icons.settings),
-          title: const Text('应用设置'),
-          delegate: const OpenDelegate(widget: ApplicationSettingView()),
-        ),
-      if (false && enableDeveloperMode)
-        ListItem.open(
-          leading: const Icon(Icons.developer_board),
-          title: const Text('开发者模式'),
-          delegate: const OpenDelegate(widget: DeveloperView()),
-        ),
-      ListItem.open(
-        leading: const Icon(Icons.info),
-        title: const Text('关于'),
-        delegate: const OpenDelegate(widget: AboutView()),
-      ),
-    ];
   }
 
   String _formatBytes(int bytes) {
@@ -424,63 +350,5 @@ class MineView extends ConsumerWidget {
     if (bytes < 1024 * 1024 * 1024)
       return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
-  }
-}
-
-class _LocaleItem extends ConsumerWidget {
-  const _LocaleItem({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ListItem(
-      leading: const Icon(Icons.language),
-      title: const Text('语言'),
-      trailing: const Icon(Icons.chevron_right, size: 20),
-      onTap: () => _showLanguageDialog(context, ref),
-    );
-  }
-
-  void _showLanguageDialog(BuildContext context, WidgetRef ref) {
-    final currentLocale = utils.getLocaleForString(
-      ref.read(appSettingProvider.select((state) => state.locale)),
-    );
-    final locales = [null, ...AppLocalizations.delegate.supportedLocales];
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('选择语言'),
-        content: SizedBox(
-          width: 300,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: locales.length,
-            itemBuilder: (_, index) {
-              final locale = locales[index];
-              final isSelected = locale == currentLocale;
-              final label = locale?.toString() ?? '默认';
-              return ListTile(
-                title: Text(label),
-                trailing: isSelected ? const Icon(Icons.check) : null,
-                onTap: () {
-                  ref
-                      .read(appSettingProvider.notifier)
-                      .update(
-                        (state) => state.copyWith(locale: locale?.toString()),
-                      );
-                  Navigator.pop(context);
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-        ],
-      ),
-    );
   }
 }

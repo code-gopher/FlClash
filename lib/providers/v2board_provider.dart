@@ -232,3 +232,29 @@ final ticketListProvider = FutureProvider<List<dynamic>>((ref) async {
     return [];
   }
 });
+
+// 用于缓存邀请码列表
+final inviteCodesProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  final authState = ref.watch(v2boardAuthProvider);
+  if (!authState.isLogin) return null;
+  try {
+    final data = await request.v2board.getInviteCodes();
+    return data['status'] == 'success' ? data['data'] : null;
+  } catch (e) {
+    return null;
+  }
+});
+
+// 用于缓存佣金记录
+final inviteDetailsProvider = FutureProvider<Map<String, dynamic>?>((
+  ref,
+) async {
+  final authState = ref.watch(v2boardAuthProvider);
+  if (!authState.isLogin) return null;
+  try {
+    final data = await request.v2board.getInviteDetails();
+    return data;
+  } catch (e) {
+    return null;
+  }
+});

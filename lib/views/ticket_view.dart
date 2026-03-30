@@ -385,7 +385,18 @@ class _CreateTicketDialogState extends ConsumerState<CreateTicketDialog> {
   }
 
   void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Text(msg),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -633,7 +644,18 @@ class _TicketDetailViewState extends ConsumerState<TicketDetailView> {
   }
 
   void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Text(msg),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showReplyDialog() {
