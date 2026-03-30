@@ -220,3 +220,15 @@ final v2boardOrdersProvider = FutureProvider<List<dynamic>>((ref) async {
     return [];
   }
 });
+
+// 用于缓存工单列表
+final ticketListProvider = FutureProvider<List<dynamic>>((ref) async {
+  final authState = ref.watch(v2boardAuthProvider);
+  if (!authState.isLogin) return [];
+  try {
+    final data = await request.v2board.getTicketList();
+    return data['data'] as List<dynamic>? ?? [];
+  } catch (e) {
+    return [];
+  }
+});

@@ -10,6 +10,7 @@ import 'package:fl_clash/views/application_setting.dart';
 import 'package:fl_clash/views/config/config.dart';
 import 'package:fl_clash/views/hotkey.dart';
 import 'package:fl_clash/views/order_list.dart';
+import 'package:fl_clash/views/ticket_view.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -350,6 +351,11 @@ class MineView extends ConsumerWidget {
         leading: const Icon(Icons.receipt_long),
         title: const Text('我的订单'),
         delegate: const OpenDelegate(widget: OrderListView()),
+      ),
+      ListItem.open(
+        leading: const Icon(Icons.confirmation_number),
+        title: const Text('工单列表'),
+        delegate: const OpenDelegate(widget: TicketListView()),
       ),
       if (false) const _LocaleItem(), // 语言
       ListItem.open(

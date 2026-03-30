@@ -144,4 +144,61 @@ class V2boardClient {
       rethrow;
     }
   }
+
+  // 工单相关接口
+  Future<dynamic> getTicketList() async {
+    final response = await dio.get(
+      '$_baseUrl/api/v1/user/ticket/fetch',
+      options: _authOptions,
+    );
+    return response.data;
+  }
+
+  Future<dynamic> getTicketDetail(int id) async {
+    final response = await dio.get(
+      '$_baseUrl/api/v1/user/ticket/fetch?id=$id',
+      options: _authOptions,
+    );
+    return response.data;
+  }
+
+  Future<dynamic> createTicket({
+    required String subject,
+    required int level,
+    required String message,
+  }) async {
+    try {
+      final response = await dio.post(
+        '$_baseUrl/api/v1/user/ticket/save?subject=${Uri.encodeComponent(subject)}&level=$level&message=${Uri.encodeComponent(message)}',
+        options: _authOptions,
+      );
+      print('[V2Board] createTicket response: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('[V2Board] createTicket error: ${e.response?.data}');
+      print('[V2Board] createTicket statusCode: ${e.response?.statusCode}');
+      print('[V2Board] createTicket message: ${e.message}');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> replyTicket({
+    required int id,
+    required String message,
+  }) async {
+    final response = await dio.post(
+      '$_baseUrl/api/v1/user/ticket/reply',
+      data: {'id': id, 'message': message},
+      options: _authOptions,
+    );
+    return response.data;
+  }
+
+  Future<dynamic> closeTicket({required int id}) async {
+    final response = await dio.get(
+      '$_baseUrl/api/v1/user/ticket/close?id=$id',
+      options: _authOptions,
+    );
+    return response.data;
+  }
 }
