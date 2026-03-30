@@ -1,7 +1,7 @@
 display_name: FlClash
 
-  packager: langpanyun
-  packagerEmail: langpanyun@github.com
+packager: langpanyun
+packagerEmail: langpanyun@github.com
 license: Other
 
 priority: optional
