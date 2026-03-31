@@ -92,7 +92,6 @@ class Request {
       return null;
     }
   }
-  }
 
   final Map<String, IpInfo Function(Map<String, dynamic>)> _ipInfoSources = {
     'https://ipwho.is': IpInfo.fromIpWhoIsJson,
