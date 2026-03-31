@@ -5,6 +5,7 @@ import 'package:fl_clash/providers/v2board_provider.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -18,11 +19,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   int _countdown = 0;
   Timer? _timer;
   bool _isLoading = false;
+  bool _rememberMe = false;
+  bool _obscurePassword = true;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailCodeController = TextEditingController();
   final _inviteCodeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
 
   @override
   void dispose() {
@@ -32,6 +41,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _emailCodeController.dispose();
     _inviteCodeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final remember = prefs.getBool('remember_me') ?? false;
+      if (remember) {
+        final email = prefs.getString('saved_email') ?? '';
+        final password = prefs.getString('saved_password') ?? '';
+        setState(() {
+          _rememberMe = true;
+          _emailController.text = email;
+          _passwordController.text = password;
+        });
+      }
+    } catch (e) {
+      // 忽略加载错误
+    }
+  }
+
+  Future<void> _saveCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_rememberMe) {
+        await prefs.setString('saved_email', _emailController.text.trim());
+        await prefs.setString('saved_password', _passwordController.text);
+        await prefs.setBool('remember_me', true);
+      } else {
+        await prefs.remove('saved_email');
+        await prefs.remove('saved_password');
+        await prefs.setBool('remember_me', false);
+      }
+    } catch (e) {
+      // 忽略保存错误
+    }
   }
 
   void _startCountdown() {
@@ -112,6 +156,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       await authNotifier.login(url, token);
 
+      // 保存凭证
+      await _saveCredentials();
+
       // 获取订阅信息
       final subInfo = await tempClient.getSubscribe();
       final subscribeUrl = subInfo['data']?['subscribe_url']?.toString();
@@ -183,15 +230,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 if (!_isLoginMode) ...[
                   const SizedBox(height: 16),
-                  TextField(
-                    controller: _inviteCodeController,
-                    decoration: const InputDecoration(
-                      labelText: '邀请码（选填）',
-                      prefixIcon: Icon(Icons.card_giftcard_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
@@ -243,14 +281,53 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '密码',
-                    prefixIcon: Icon(Icons.lock_outline),
-                    border: OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
-                  obscureText: true,
+                  obscureText: _obscurePassword,
                 ),
-                const SizedBox(height: 24),
+                if (!_isLoginMode) ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _inviteCodeController,
+                    decoration: const InputDecoration(
+                      labelText: '邀请码（选填）',
+                      prefixIcon: Icon(Icons.card_giftcard_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                if (_isLoginMode)
+                  CheckboxListTile(
+                    value: _rememberMe,
+                    onChanged: (value) {
+                      setState(() {
+                        _rememberMe = value ?? false;
+                      });
+                    },
+                    title: const Text('记住我'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  )
+                else
+                  const SizedBox(height: 8),
+                const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   height: 48,

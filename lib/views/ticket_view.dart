@@ -416,37 +416,43 @@ class _CreateTicketDialogState extends ConsumerState<CreateTicketDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              value: _level,
-              decoration: const InputDecoration(
-                labelText: '优先级',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(value: 0, child: Text('低')),
-                DropdownMenuItem(value: 1, child: Text('中')),
-                DropdownMenuItem(value: 2, child: Text('高')),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '优先级',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<int>(
+                  segments: const [
+                    ButtonSegment(value: 0, label: Text('低')),
+                    ButtonSegment(value: 1, label: Text('中')),
+                    ButtonSegment(value: 2, label: Text('高')),
+                  ],
+                  selected: {_level},
+                  onSelectionChanged: (Set<int> newSelection) {
+                    setState(() {
+                      _level = newSelection.first;
+                    });
+                  },
+                ),
               ],
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _level = value);
-                }
-              },
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 120,
-              child: TextField(
-                controller: _messageController,
-                decoration: const InputDecoration(
-                  labelText: '内容',
-                  hintText: '请输入工单内容',
-                  alignLabelWithHint: true,
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: null,
-                textAlignVertical: TextAlignVertical.top,
+            TextField(
+              controller: _messageController,
+              decoration: const InputDecoration(
+                labelText: '内容',
+                hintText: '请输入工单内容',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(),
               ),
+              maxLines: 8,
+              minLines: 5,
+              textAlignVertical: TextAlignVertical.top,
             ),
           ],
         ),
