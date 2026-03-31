@@ -81,7 +81,7 @@ class Request {
       );
       if (response.statusCode != 200) return null;
       final data = response.data as Map<String, dynamic>;
-      final remoteVersion = data['tag_name'];
+      final remoteVersion = data['tag_name'] as String;
       final version = globalState.packageInfo.version;
       final hasUpdate =
           utils.compareVersions(remoteVersion.replaceAll('v', ''), version) > 0;
@@ -91,6 +91,7 @@ class Request {
       commonPrint.log('checkForUpdate failed', logLevel: LogLevel.warning);
       return null;
     }
+  }
   }
 
   final Map<String, IpInfo Function(Map<String, dynamic>)> _ipInfoSources = {

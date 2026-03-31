@@ -174,9 +174,20 @@ class Utils {
     if (patch1 != patch2) {
       return patch1.compareTo(patch2);
     }
-    int build1 = version1.contains('+') ? int.parse(version1.split('+')[1]) : 0;
-    int build2 = version2.contains('+') ? int.parse(version2.split('+')[1]) : 0;
-    return build1.compareTo(build2);
+    int build1 = 0;
+    int build2 = 0;
+    if (version1.contains('+')) {
+      final parts1 = version1.split('+');
+      build1 = int.tryParse(parts1.length > 1 ? parts1[1] : '0') ?? 0;
+    }
+    if (version2.contains('+')) {
+      final parts2 = version2.split('+');
+      build2 = int.tryParse(parts2.length > 1 ? parts2[1] : '0') ?? 0;
+    }
+    if (build1 != build2) {
+      return build1.compareTo(build2);
+    }
+    return 0;
   }
 
   // String getPinyin(String value) {
